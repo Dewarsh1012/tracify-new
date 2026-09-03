@@ -1,0 +1,145 @@
+{
+  "regressor": {
+    "model_type": "RandomForestRegressor",
+    "target": "relevance_score (0-100)",
+    "top_features": [
+      {
+        "rank": 1,
+        "feature": "amount_similarity",
+        "importance": 0.33938
+      },
+      {
+        "rank": 2,
+        "feature": "value_ratio",
+        "importance": 0.335567
+      },
+      {
+        "rank": 3,
+        "feature": "entity_evidence",
+        "importance": 0.145805
+      },
+      {
+        "rank": 4,
+        "feature": "fanin",
+        "importance": 0.058573
+      },
+      {
+        "rank": 5,
+        "feature": "degree",
+        "importance": 0.039139
+      },
+      {
+        "rank": 6,
+        "feature": "transaction_frequency",
+        "importance": 0.029953
+      },
+      {
+        "rank": 7,
+        "feature": "hop_count",
+        "importance": 0.015429
+      },
+      {
+        "rank": 8,
+        "feature": "path_length",
+        "importance": 0.015219
+      },
+      {
+        "rank": 9,
+        "feature": "fanout",
+        "importance": 0.008826
+      },
+      {
+        "rank": 10,
+        "feature": "address_age",
+        "importance": 0.008821
+      },
+      {
+        "rank": 11,
+        "feature": "time_delta",
+        "importance": 0.00285
+      },
+      {
+        "rank": 12,
+        "feature": "same_asset",
+        "importance": 0.000437
+      }
+    ],
+    "interpretation": {
+      "amount_similarity": "Most important feature (0.3394). Strongly drives relevance predictions.",
+      "value_ratio": "Second most important (0.3356). Key contributing factor.",
+      "entity_evidence": "Third most important (0.1458)."
+    }
+  },
+  "classifier": {
+    "model_type": "RandomForestClassifier",
+    "target": "behavior_class (0=Normal, 1=Rapid, 2=Fragment, 3=Consolidate)",
+    "top_features": [
+      {
+        "rank": 1,
+        "feature": "fanout",
+        "importance": 0.391807
+      },
+      {
+        "rank": 2,
+        "feature": "degree",
+        "importance": 0.158204
+      },
+      {
+        "rank": 3,
+        "feature": "fanin",
+        "importance": 0.147133
+      },
+      {
+        "rank": 4,
+        "feature": "transaction_frequency",
+        "importance": 0.095253
+      },
+      {
+        "rank": 5,
+        "feature": "amount_similarity",
+        "importance": 0.051536
+      },
+      {
+        "rank": 6,
+        "feature": "value_ratio",
+        "importance": 0.050749
+      },
+      {
+        "rank": 7,
+        "feature": "hop_count",
+        "importance": 0.032198
+      },
+      {
+        "rank": 8,
+        "feature": "path_length",
+        "importance": 0.029735
+      },
+      {
+        "rank": 9,
+        "feature": "address_age",
+        "importance": 0.019801
+      },
+      {
+        "rank": 10,
+        "feature": "time_delta",
+        "importance": 0.012703
+      },
+      {
+        "rank": 11,
+        "feature": "entity_evidence",
+        "importance": 0.009365
+      },
+      {
+        "rank": 12,
+        "feature": "same_asset",
+        "importance": 0.001518
+      }
+    ],
+    "interpretation": {
+      "fanout": "Most discriminative feature (0.3918). Primary driver of behavior classification.",
+      "degree": "Second most discriminative (0.1582).",
+      "fanin": "Third most discriminative (0.1471)."
+    }
+  },
+  "shap_available": true
+}

@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blockchain Forensics Investigation Platform</title>
+    <!-- Google Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --bg-dark: #090d16;
+            --bg-card: rgba(17, 24, 39, 0.7);
+            --bg-card-hover: rgba(31, 41, 55, 0.8);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-glow: rgba(6, 182, 212, 0.3);
+
+            --accent-cyan: #06b6d4;
+            --accent-purple: #8b5cf6;
+            --accent-emerald: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-rose: #f43f5e;
+            --accent-blue: #3b82f6;
+
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --text-dim: #6b7280;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(6, 182, 212, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(139, 92, 246, 0.08) 0%, transparent 40%);
+            background-attachment: fixed;
+            line-height: 1.5;
+        }
+
+        /* Top Navbar */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem 2rem;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.35rem 0.85rem;
+            border-radius: 9999px;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: var(--accent-emerald);
+            font-size: 0.825rem;
+            font-weight: 600;
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--accent-emerald);
+            box-shadow: 0 0 8px var(--accent-emerald);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+
+        /* Container */
+        .container {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Hero / Preset Bar */
+        .preset-section {
+            margin-bottom: 2rem;
+        }
+
+        .section-header {
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .presets-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1rem;
+        }
+
+        .preset-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 1rem 1.25rem;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            backdrop-filter: blur(12px);
+        }
+
+        .preset-card:hover {
+            border-color: var(--accent-cyan);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(6, 182, 212, 0.15);
+            background: var(--bg-card-hover);
+        }
+
+        .preset-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 0.35rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .preset-desc {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        /* Main Grid */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 460px 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Glass Panel */
+        .glass-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.75rem;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .panel-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        /* Form Inputs */
+        .feature-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.15rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .feature-name {
+            color: var(--text-main);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .val-badge {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border-color);
+            padding: 0.15rem 0.5rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-cyan);
+            font-weight: 600;
+        }
+
+        .input-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            accent-color: var(--accent-cyan);
+            cursor: pointer;
+        }
+
+        input[type="number"] {
+            width: 85px;
+            padding: 0.4rem 0.6rem;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-main);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            outline: none;
+        }
+
+        input[type="number"]:focus {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 10px rgba(6, 182, 212, 0.25);
+        }
+
+        select {
+            width: 100%;
+            padding: 0.55rem 0.8rem;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-main);
+            font-size: 0.875rem;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .btn-analyze {
+            width: 100%;
+            padding: 0.9rem;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            color: white;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 20px rgba(6, 182, 212, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            margin-top: 0.5rem;
+        }
+
+        .btn-analyze:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(6, 182, 212, 0.5);
+        }
+
+        /* Results Panel */
+        .results-column {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* Score Cards Grid */
+        .score-cards-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+        }
+
+        .score-card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .score-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
+        }
+
+        .score-val {
+            font-size: 3.5rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            line-height: 1;
+            margin: 0.5rem 0;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .risk-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.35rem 1rem;
+            border-radius: 9999px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .risk-high {
+            background: rgba(244, 63, 94, 0.15);
+            color: var(--accent-rose);
+            border: 1px solid rgba(244, 63, 94, 0.3);
+            box-shadow: 0 0 15px rgba(244, 63, 94, 0.2);
+        }
+
+        .risk-medium {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--accent-amber);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.2);
+        }
+
+        .risk-low {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-emerald);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
+        }
+
+        .behavior-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin: 0.5rem 0;
+            color: var(--accent-cyan);
+        }
+
+        .behavior-desc {
+            font-size: 0.825rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        /* Path Topology Visualizer */
+        .topology-box {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.25rem;
+            min-height: 140px;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            position: relative;
+        }
+
+        .node {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.4rem;
+            z-index: 2;
+        }
+
+        .node-circle {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(17, 24, 39, 0.9);
+            border: 2px solid var(--accent-cyan);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            color: white;
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .node-target .node-circle {
+            border-color: var(--accent-rose);
+            box-shadow: 0 0 20px rgba(244, 63, 94, 0.4);
+            background: rgba(244, 63, 94, 0.15);
+        }
+
+        .node-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .path-arrow {
+            flex: 1;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
+            position: relative;
+            margin: 0 0.5rem;
+            box-shadow: 0 0 8px var(--accent-cyan);
+        }
+
+        .path-arrow::after {
+            content: '►';
+            position: absolute;
+            right: -6px;
+            top: -7px;
+            font-size: 0.7rem;
+            color: var(--accent-purple);
+        }
+
+        /* Chart container */
+        .chart-box {
+            position: relative;
+            height: 260px;
+        }
+
+        /* Audit Table */
+        .audit-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        .audit-table th, .audit-table td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .audit-table th {
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+        }
+
+        .audit-table tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        /* Loading spinner */
+        .spinner {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo">
+            <div class="logo-icon">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <div>
+                <div>Blockchain Forensics Platform</div>
+                <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 400;">NetworkX Path Analysis & ML Risk Scoring</div>
+            </div>
+        </div>
+
+        <div class="status-badge">
+            <span class="pulse-dot"></span>
+            <span>Models Online — Localhost:5000</span>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container">
+
+        <!-- Presets Row -->
+        <div class="preset-section">
+            <div class="section-header">
+                <i class="fa-solid fa-bolt" style="color: var(--accent-amber);"></i>
+                <span>Investigator Quick Scenario Presets</span>
+            </div>
+            <div class="presets-grid" id="presets-container">
+                <!-- Preset buttons populated via JS -->
+            </div>
+        </div>
+
+        <!-- Main 2-Column Layout -->
+        <div class="main-grid">
+
+            <!-- Left Column: Input Form -->
+            <div class="glass-panel">
+                <div class="panel-title">
+                    <span><i class="fa-solid fa-sliders" style="color: var(--accent-cyan); margin-right: 0.5rem;"></i>Path Feature Parameters</span>
+                    <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 400;">12 Engineered Graph Features</span>
+                </div>
+
+                <form class="feature-form" id="forensic-form" onsubmit="handleAnalyze(event)">
+                    
+                    <!-- value_ratio -->
+                    <div class="form-group">
+                        <div class="label-row">
+                            <span class="feature-name">value_ratio</span>
+                            <span class="val-badge" id="val-value_ratio">0.95</span>
+                        </div>
+                        <div class="input-row">
+                            <input type="range" id="slider-value_ratio" min="0" max="1" step="0.01" value="0.95" oninput="syncVal('value_ratio', this.value)">
+                            <input type="number" id="num-value_ratio" min="0" max="1" step="0.01" value="0.95" onchange="syncVal('value_ratio', this.value)">
+                        </div>
+                    </div>
+
+                    <!-- time_delta -->
+                    <div class="form-group">
+                        <div class="label-row">
+                            <span class="feature-name">time_delta (seconds)</span>
+                            <span class="val-badge" id="val-time_delta">120.0</span>
+                        </div>
+                        <div class="input-row">
+                            <input type="range" id="slider-time_delta" min="1" max="10000" step="1" value="120" oninput="syncVal('time_delta', this.value)">
+                            <input type="number" id="num-time_delta" min="1" max="10000" step="1" value="120" onchange="syncVal('time_delta', this.value)">
+                        </div>
+                    </div>
+
+                    <!-- hop_count -->
+                    <div class="form-group">
+                        <div class="label-row">
+                            <span class="feature-name">hop_count (1–6)</span>
+                            <span class="val-badge" id="val-hop_count">3</span>
+                        </div>
+                        <div class="input-row">
+                            <input type="range" id="slider-hop_count" min="1" max="6" step="1" value="3" oninput="syncHop(this.value)">
+                            <input type="number" id="num-hop_count" min="1" max="6" step="1" value="3" onchange="syncHop(this.value)">
+                        </div>
+                    </div>
+
+                    <!-- amount_similarity -->
+                    <div class="form-group">
+                        <div class="label-row">
+                            <span class="feature-name">amount_similarity</span>
+                            <span class="val-badge" id="val-amount_similarity">0.92</span>
+                        </div>
+                        <div class="input-row">
+                            <input type="range" id="slider-amount_similarity" min="0" max="1" step="0.01" value="0.92" oninput="syncVal('amount_similarity', this.value)">
+                            <input type="number" id="num-amount_similarity" min="0" max="1" step="0.01" value="0.92" onchange="syncVal('amount_similarity', this.value)">
+                        </div>
+                    </div>
+
+                    <!-- degree -->
+                    <div class="form-group">
+                        <div class="label-row">
+                            <span class="feature-name">degree (avg node degree)</span>
+                            <span class="val-badge" id="val-degree">8.0</span>
+                        </div>
+                        <div class="input-row">
+                            <input type="range" id="slider-degree" min="1" max="150" step="0.5" value="8" oninput="syncVal('degree', this.value)">
+                            <input type="number" id="num-degree" min="1" max="150" step="0.5" value="8" onchange="syncVal('degree', this.value)">
+                        </div>
+                    </div>
+
+                    <!-- fanout -->
+                    <div class="form-group">
+                        <div class="label-row">
+                            <span class="feature-name">fanout (outgoing neighbors)</span>
+                            <span class="val-badge" id="val-fanout">2.0</span>
+                        </div>
+                        <div class="input-row">
+                            <input type="range" id="slider-fanout" min="0" max="150" step="0.5" value="2" oninput="syncVal('fanout', this.value)">
+                            <input type="number" id="num-fanout" min="0" max="150" step="0.5" value="2" onchange="syncVal('fanout', this.value)">
+                        </div>
+                    </div>
+
+                    <!-- fanin -->
+                    <div class="form-group">
+                        <div class="label-row">
+                            <span class="feature-name">fanin (incoming neighbors)</span>
+                            <span class="val-badge" id="val-fanin">1.0</span>
+                        </div>
+                        <div class="input-row">
+                            <input type="range" id="slider-fanin" min="0" max="150" step="0.5" value="1" oninput="syncVal('fanin', this.value)">
+                            <input type="number" id="num-fanin" min="0" max="150" step="0.5" value="1" onchange="syncVal('fanin', this.value)">
+                        </div>
+                    </div>
+
+                    <!-- transaction_frequency -->
+                    <div class="form-group">
+                        <div class="label-row">
+                            <span class="feature-name">transaction_frequency</span>
+                            <span class="val-badge" id="val-transaction_frequency">22.0</span>
+                        </div>
+                        <div class="input-row">
+                            <input type="range" id="slider-transaction_frequency" min="0.1" max="500" step="0.5" value="22" oninput="syncVal('transaction_frequency', this.value)">
+                            <input type="number" id="num-transaction_frequency" min="0.1" max="500" step="0.5" value="22" onchange="syncVal('transaction_frequency', this.value)">
+                        </div>
+                    </div>
+
+                    <!-- entity_evidence -->
+                    <div class="form-group">
+                        <div class="label-row">
+                            <span class="feature-name">entity_evidence</span>
+                            <span class="val-badge" id="val-entity_evidence">3</span>
+                        </div>
+                        <select id="select-entity_evidence" onchange="syncVal('entity_evidence', this.value)">
+                            <option value="0">0 — Unknown Evidence</option>
+                            <option value="1">1 — Weak Evidence</option>
+                            <option value="2">2 — Medium Evidence</option>
+                            <option value="3" selected>3 — Strong Evidence (Illicit Attribution)</option>
+                        </select>
+                    </div>
+
+                    <!-- address_age -->
+                    <div class="form-group">
+                        <div class="label-row">
+                            <span class="feature-name">address_age (days)</span>
+                            <span class="val-badge" id="val-address_age">400</span>
+                        </div>
+                        <div class="input-row">
+                            <input type="range" id="slider-address_age" min="1" max="1500" step="1" value="400" oninput="syncVal('address_age', this.value)">
+                            <input type="number" id="num-address_age" min="1" max="1500" step="1" value="400" onchange="syncVal('address_age', this.value)">
+                        </div>
+                    </div>
+
+                    <!-- same_asset & path_length (hidden sync) -->
+                    <input type="hidden" id="num-same_asset" value="1">
+                    <input type="hidden" id="num-path_length" value="4">
+
+                    <button type="submit" class="btn-analyze" id="btn-submit">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <span>Analyze Transaction Path</span>
+                    </button>
+
+                </form>
+            </div>
+
+            <!-- Right Column: Results & Analytics -->
+            <div class="results-column">
+
+                <!-- Score Cards Grid -->
+                <div class="score-cards-grid">
+                    
+                    <!-- Relevance Score Card -->
+                    <div class="score-card">
+                        <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">
+                            Relevance Score
+                        </div>
+                        <div class="score-val" id="score-display" style="color: var(--accent-rose);">91.0</div>
+                        <div id="risk-badge-container">
+                            <span class="risk-badge risk-high" id="risk-badge">
+                                <i class="fa-solid fa-triangle-exclamation"></i> HIGH RISK
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Behavior Class Card -->
+                    <div class="score-card">
+                        <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">
+                            Behavioral Classification
+                        </div>
+                        <div class="behavior-title" id="behavior-title">Rapid Movement</div>
+                        <div class="behavior-desc" id="behavior-desc">
+                            Multiple fast transaction hops across short durations with high frequency.
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Path Topology Visualizer -->
+                <div class="glass-panel" style="padding: 1.25rem;">
+                    <div class="panel-title" style="font-size: 0.95rem; margin-bottom: 0.75rem; border-bottom: none;">
+                        <span><i class="fa-solid fa-diagram-project" style="color: var(--accent-purple); margin-right: 0.4rem;"></i>Path Topology Visualization</span>
+                        <span style="font-size: 0.75rem; color: var(--text-muted);" id="topology-meta">4 Nodes • 3 Hops</span>
+                    </div>
+                    <div class="topology-box" id="topology-box">
+                        <!-- Rendered by JS -->
+                    </div>
+                </div>
+
+                <!-- Feature Importance Chart -->
+                <div class="glass-panel">
+                    <div class="panel-title">
+                        <span><i class="fa-solid fa-chart-bar" style="color: var(--accent-emerald); margin-right: 0.5rem;"></i>Model Feature Importance & Attribution</span>
+                    </div>
+                    <div class="chart-box">
+                        <canvas id="importanceChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Recent Investigation Audit Log -->
+                <div class="glass-panel">
+                    <div class="panel-title">
+                        <span><i class="fa-solid fa-clock-rotate-left" style="color: var(--accent-amber); margin-right: 0.5rem;"></i>Session Audit Log</span>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table class="audit-table">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Scenario</th>
+                                    <th>Score</th>
+                                    <th>Risk Level</th>
+                                    <th>Behavior Pattern</th>
+                                </tr>
+                            </thead>
+                            <tbody id="audit-tbody">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Script -->
+    <script>
+        let chartInstance = null;
+        let presetsData = {};
+
+        // Behavior Descriptions
+        const behaviorDescriptions = {
+            "Normal Flow": "Standard transaction movement with balanced fanin/fanout and low velocity.",
+            "Rapid Movement": "High velocity transfers across multiple hops in short durations.",
+            "Fragmentation": "Splitting funds across multiple recipient wallets (peeling chains / mixing).",
+            "Consolidation": "Merging funds from multiple source wallets into a central destination node."
+        };
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchPresets();
+            initChart();
+            // Initial analysis
+            runAnalysis();
+        });
+
+        // Sync slider & number inputs
+        function syncVal(name, val) {
+            val = parseFloat(val);
+            const slider = document.getElementById(`slider-${name}`);
+            const num = document.getElementById(`num-${name}`);
+            const badge = document.getElementById(`val-${name}`);
+
+            if (slider) slider.value = val;
+            if (num) num.value = val;
+            if (badge) badge.innerText = val.toFixed(name === 'time_delta' || name === 'address_age' ? 0 : 2);
+        }
+
+        function syncHop(val) {
+            val = parseInt(val);
+            document.getElementById('slider-hop_count').value = val;
+            document.getElementById('num-hop_count').value = val;
+            document.getElementById('val-hop_count').innerText = val;
+            document.getElementById('num-path_length').value = val + 1;
+        }
+
+        // Fetch presets from API
+        async function fetchPresets() {
+            try {
+                const res = await fetch('/api/presets');
+                presetsData = await res.json();
+                renderPresets();
+            } catch (err) {
+                console.error("Failed to load presets:", err);
+            }
+        }
+
+        function renderPresets() {
+            const container = document.getElementById('presets-container');
+            container.innerHTML = '';
+
+            for (const [key, preset] of Object.entries(presetsData)) {
+                const card = document.createElement('div');
+                card.className = 'preset-card';
+                card.onclick = () => loadPreset(key);
+                card.innerHTML = `
+                    <div class="preset-title">${preset.name}</div>
+                    <div class="preset-desc">${preset.description}</div>
+                `;
+                container.appendChild(card);
+            }
+        }
+
+        function loadPreset(key) {
+            const preset = presetsData[key];
+            if (!preset) return;
+
+            const feats = preset.features;
+            for (const [col, val] of Object.entries(feats)) {
+                if (col === 'hop_count') {
+                    syncHop(val);
+                } else if (col === 'entity_evidence') {
+                    const sel = document.getElementById('select-entity_evidence');
+                    if (sel) sel.value = val;
+                    document.getElementById('val-entity_evidence').innerText = val;
+                } else {
+                    syncVal(col, val);
+                }
+            }
+
+            runAnalysis();
+        }
+
+        // Collect form data
+        function getFormFeatures() {
+            return {
+                value_ratio: parseFloat(document.getElementById('num-value_ratio').value),
+                time_delta: parseFloat(document.getElementById('num-time_delta').value),
+                same_asset: 1,
+                hop_count: parseInt(document.getElementById('num-hop_count').value),
+                amount_similarity: parseFloat(document.getElementById('num-amount_similarity').value),
+                degree: parseFloat(document.getElementById('num-degree').value),
+                fanout: parseFloat(document.getElementById('num-fanout').value),
+                fanin: parseFloat(document.getElementById('num-fanin').value),
+                address_age: parseFloat(document.getElementById('num-address_age').value),
+                transaction_frequency: parseFloat(document.getElementById('num-transaction_frequency').value),
+                entity_evidence: parseInt(document.getElementById('select-entity_evidence').value),
+                path_length: parseInt(document.getElementById('num-hop_count').value) + 1
+            };
+        }
+
+        function handleAnalyze(e) {
+            e.preventDefault();
+            runAnalysis();
+        }
+
+        async function runAnalysis() {
+            const btn = document.getElementById('btn-submit');
+            btn.innerHTML = '<span class="spinner"></span> Analyzing Path...';
+
+            const features = getFormFeatures();
+
+            try {
+                const res = await fetch('/api/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(features)
+                });
+                const data = await res.json();
+
+                if (data.status === 'success') {
+                    updateDisplay(data.prediction, data.feature_contributions, features);
+                }
+            } catch (err) {
+                console.error("Prediction error:", err);
+            } finally {
+                btn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> Analyze Transaction Path';
+            }
+        }
+
+        function updateDisplay(pred, contributions, features) {
+            // 1. Relevance Score
+            const score = pred.relevance_score;
+            const scoreEl = document.getElementById('score-display');
+            scoreEl.innerText = score.toFixed(1);
+
+            // Risk Badge
+            const riskBadge = document.getElementById('risk-badge');
+            if (pred.risk_level === 'HIGH') {
+                riskBadge.className = 'risk-badge risk-high';
+                riskBadge.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> HIGH RISK';
+                scoreEl.style.color = 'var(--accent-rose)';
+            } else if (pred.risk_level === 'MEDIUM') {
+                riskBadge.className = 'risk-badge risk-medium';
+                riskBadge.innerHTML = '<i class="fa-solid fa-shield-cat"></i> MEDIUM RISK';
+                scoreEl.style.color = 'var(--accent-amber)';
+            } else {
+                riskBadge.className = 'risk-badge risk-low';
+                riskBadge.innerHTML = '<i class="fa-solid fa-shield-check"></i> LOW RISK';
+                scoreEl.style.color = 'var(--accent-emerald)';
+            }
+
+            // 2. Behavior Class
+            const label = pred.behavior_label;
+            document.getElementById('behavior-title').innerText = label;
+            document.getElementById('behavior-desc').innerText = behaviorDescriptions[label] || '';
+
+            // 3. Path Topology Visualizer
+            renderTopology(features.hop_count, pred.risk_level);
+
+            // 4. Update Chart
+            updateChart(contributions);
+
+            // 5. Audit Log Entry
+            addAuditLog(score, pred.risk_level, label);
+        }
+
+        function renderTopology(hops, risk) {
+            const container = document.getElementById('topology-box');
+            document.getElementById('topology-meta').innerText = `${hops + 1} Nodes • ${hops} Hop${hops > 1 ? 's' : ''}`;
+            container.innerHTML = '';
+
+            // Suspect Origin Node
+            container.appendChild(createNode('Suspect Target', 'fa-wallet', true));
+
+            for (let i = 1; i <= hops; i++) {
+                // Arrow
+                const arrow = document.createElement('div');
+                arrow.className = 'path-arrow';
+                container.appendChild(arrow);
+
+                // Hop Node
+                const isDest = (i === hops);
+                const name = isDest ? 'Destination' : `Wallet ${String.fromCharCode(64 + i)}`;
+                const icon = isDest ? 'fa-building-columns' : 'fa-network-wired';
+                container.appendChild(createNode(name, icon, false, isDest));
+            }
+        }
+
+        function createNode(name, iconClass, isOrigin, isDest) {
+            const div = document.createElement('div');
+            div.className = `node ${isOrigin ? 'node-target' : ''}`;
+            div.innerHTML = `
+                <div class="node-circle">
+                    <i class="fa-solid ${iconClass}"></i>
+                </div>
+                <div class="node-label">${name}</div>
+            `;
+            return div;
+        }
+
+        // Initialize Chart.js
+        function initChart() {
+            const ctx = document.getElementById('importanceChart').getContext('2d');
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Feature Importance Weight',
+                        data: [],
+                        backgroundColor: 'rgba(6, 182, 212, 0.6)',
+                        borderColor: '#06b6d4',
+                        borderWidth: 1,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#9ca3af' }
+                        },
+                        y: {
+                            grid: { display: false },
+                            ticks: { color: '#f3f4f6', font: { family: 'JetBrains Mono' } }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateChart(contributions) {
+            if (!chartInstance) return;
+            const top5 = contributions.slice(0, 7);
+            chartInstance.data.labels = top5.map(c => c.feature);
+            chartInstance.data.datasets[0].data = top5.map(c => c.importance);
+            chartInstance.update();
+        }
+
+        function addAuditLog(score, risk, behavior) {
+            const tbody = document.getElementById('audit-tbody');
+            const row = document.createElement('tr');
+            const timeStr = new Date().toLocaleTimeString();
+
+            row.innerHTML = `
+                <td style="font-family: 'JetBrains Mono'; color: var(--text-muted);">${timeStr}</td>
+                <td>Custom Investigation</td>
+                <td style="font-family: 'JetBrains Mono'; font-weight: 700;">${score.toFixed(1)}</td>
+                <td><span class="risk-badge ${risk === 'HIGH' ? 'risk-high' : risk === 'MEDIUM' ? 'risk-medium' : 'risk-low'}" style="padding: 0.15rem 0.6rem; font-size: 0.75rem;">${risk}</span></td>
+                <td style="font-weight: 600; color: var(--accent-cyan);">${behavior}</td>
+            `;
+
+            tbody.insertBefore(row, tbody.firstChild);
+            if (tbody.children.length > 8) {
+                tbody.removeChild(tbody.lastChild);
+            }
+        }
+    </script>
+</body>
+</html>

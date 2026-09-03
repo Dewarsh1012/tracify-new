@@ -1,0 +1,5 @@
+Class,Label,Count,Percentage,Target
+0,Normal Flow,40000,40.0%,40K (40%)
+1,Rapid Movement,25000,25.0%,25K (25%)
+2,Fragmentation,20000,20.0%,20K (20%)
+3,Consolidation,15000,15.0%,15K (15%)

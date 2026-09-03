@@ -1,0 +1,15 @@
+Feature,Missing_Count,Missing_Pct
+value_ratio,0,0.00%
+time_delta,0,0.00%
+same_asset,0,0.00%
+hop_count,0,0.00%
+amount_similarity,0,0.00%
+degree,0,0.00%
+fanout,0,0.00%
+fanin,0,0.00%
+address_age,0,0.00%
+transaction_frequency,0,0.00%
+entity_evidence,0,0.00%
+path_length,0,0.00%
+relevance_score,0,0.00%
+behavior_class,0,0.00%

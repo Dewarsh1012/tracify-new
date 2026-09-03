@@ -1,0 +1,17 @@
+{
+  "features": [
+    "value_ratio",
+    "time_delta",
+    "same_asset",
+    "hop_count",
+    "amount_similarity",
+    "degree",
+    "fanout",
+    "fanin",
+    "address_age",
+    "transaction_frequency",
+    "entity_evidence",
+    "path_length"
+  ],
+  "count": 12
+}

@@ -1,0 +1,16 @@
+NetworkX Graph Statistics
+==================================================
+Total Nodes: 203769
+Total Edges: 234355
+Avg In-Degree: 1.150
+Avg Out-Degree: 1.150
+Max In-Degree: 284
+Max Out-Degree: 472
+Nodes with Edges: 203769
+Isolated Nodes: 0
+Weakly Connected Components: 49
+Illicit Nodes (class=1): 4545
+Licit Nodes (class=2): 42019
+Unknown Nodes: 157205
+Timestep Range: 1 – 49
+Density: 0.000006

@@ -1,0 +1,56 @@
+{
+  "model_type": "RandomForestRegressor",
+  "task": "regression",
+  "target": "relevance_score",
+  "features": [
+    "value_ratio",
+    "time_delta",
+    "same_asset",
+    "hop_count",
+    "amount_similarity",
+    "degree",
+    "fanout",
+    "fanin",
+    "address_age",
+    "transaction_frequency",
+    "entity_evidence",
+    "path_length"
+  ],
+  "n_features": 12,
+  "train_samples": 80000,
+  "test_samples": 20000,
+  "best_params": {
+    "max_depth": 20,
+    "max_features": "sqrt",
+    "min_samples_leaf": 1,
+    "min_samples_split": 2,
+    "n_estimators": 200
+  },
+  "metrics": {
+    "MAE": 1.5861,
+    "MSE": 4.5074,
+    "RMSE": 2.1231,
+    "R2": 0.992549,
+    "CV_R2_mean": 0.991631,
+    "CV_R2_std": 0.000159
+  },
+  "feature_importances": {
+    "value_ratio": 0.335567,
+    "time_delta": 0.00285,
+    "same_asset": 0.000437,
+    "hop_count": 0.015429,
+    "amount_similarity": 0.33938,
+    "degree": 0.039139,
+    "fanout": 0.008826,
+    "fanin": 0.058573,
+    "address_age": 0.008821,
+    "transaction_frequency": 0.029953,
+    "entity_evidence": 0.145805,
+    "path_length": 0.015219
+  },
+  "training_time_seconds": 89.09,
+  "validation_report": {
+    "total_missing": 0,
+    "duplicates": 0
+  }
+}

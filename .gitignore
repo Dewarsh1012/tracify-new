@@ -1,0 +1,8 @@
+elliptic_txs_features.csv
+elliptic_txs_edgelist.csv
+elliptic_txs_classes.csv
+*.csv
+!project/data/*.csv
+.DS_Store
+__pycache__/
+*.pyc

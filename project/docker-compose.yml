@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  forensics-ml-app:
+    build: .
+    container_name: blockchain_forensics_app
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - PORT=5000
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/presets"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
