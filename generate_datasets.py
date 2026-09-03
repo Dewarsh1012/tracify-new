@@ -45,14 +45,20 @@ def log(msg):
     print(f"[{time.strftime('%H:%M:%S')}] {msg}", flush=True)
 
 
-def run_dataset_generation():
-    # ══════════════════════════════════════════════════════════════════════
-    # PHASE 1: Build Transaction Graph
-    # ══════════════════════════════════════════════════════════════════════
-    log("PHASE 1: Building transaction graph...")
+# Streamlit Cloud Fallback Check
+if not os.path.exists(CLASSES_FILE) and os.path.exists("streamlit_app.py"):
+    import streamlit as st
+    with open("streamlit_app.py") as f:
+        exec(f.read())
+    sys.exit(0)
 
-    # Load classes
-    classes_df = pd.read_csv(CLASSES_FILE)
+# ══════════════════════════════════════════════════════════════════════
+# PHASE 1: Build Transaction Graph
+# ══════════════════════════════════════════════════════════════════════
+log("PHASE 1: Building transaction graph...")
+
+# Load classes
+classes_df = pd.read_csv(CLASSES_FILE)
 class_map = {}
 for _, row in classes_df.iterrows():
     txid = int(row["txId"])
@@ -763,15 +769,5 @@ print("CLASSIFIER SAMPLE (first 5 rows):")
 print(clf_df.head().to_string(index=False))
 print()
 
-    log("All done! ✓")
-
-
-if __name__ == "__main__":
-    if not os.path.exists(CLASSES_FILE):
-        # Redirect Streamlit Cloud to the main dashboard application
-        import streamlit as st
-        with open("streamlit_app.py") as f:
-            exec(f.read())
-    else:
-        run_dataset_generation()
+log("All done! ✓")
 
