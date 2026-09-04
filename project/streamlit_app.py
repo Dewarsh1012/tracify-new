@@ -262,23 +262,6 @@ with tab1:
         )
         st.plotly_chart(fig_net, use_container_width=True)
 
-    with col_right:
-        st.subheader("🎯 Feature Contribution Breakdown")
-        
-        reg_imp = metadata.get("explanation", {}).get("regressor", {}).get("top_features", [])
-        
-        imp_df = pd.DataFrame(reg_imp)
-        if not imp_df.empty:
-            fig_bar = px.bar(
-                imp_df.sort_values("importance", ascending=True),
-                x="importance", y="feature",
-                orientation='h',
-                title="Global Regressor Feature Importance",
-                color_discrete_sequence=['#06b6d4']
-            )
-            fig_bar.update_layout(height=260, margin=dict(l=20, r=20, t=30, b=20))
-            st.plotly_chart(fig_bar, use_container_width=True)
-
 # ── TAB 2: Model Performance & Plots ──
 with tab2:
     st.subheader("Random Forest Models Performance Metrics")
