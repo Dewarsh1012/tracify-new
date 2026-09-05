@@ -24,8 +24,8 @@ st.set_page_config(
 )
 
 @st.cache_resource
-def load_forensic_predictor():
-    """Load models once and cache across user sessions."""
+def load_forensic_predictor(model_version="xgboost_v3_responsive"):
+    """Load models once and cache across user sessions (busted by version parameter)."""
     return ForensicPredictor(models_dir=MODELS_DIR)
 
 
@@ -63,10 +63,10 @@ preset_options = {
         "value_ratio": 0.34, "time_delta": 15.0, "hop_count": 2,
         "amount_similarity": 0.42, "degree": 10.0, "fanout": 6.0,
         "fanin": 1.0, "transaction_frequency": 140.0,
-        "entity_evidence": 2, "address_age": 220.0
+        "entity_evidence": 3, "address_age": 220.0
     },
     "Rapid Movement": {
-        "value_ratio": 0.95, "time_delta": 25.0, "hop_count": 4,
+        "value_ratio": 0.95, "time_delta": 20.0, "hop_count": 4,
         "amount_similarity": 0.92, "degree": 8.0, "fanout": 0.9,
         "fanin": 1.0, "transaction_frequency": 180.0,
         "entity_evidence": 3, "address_age": 400.0
@@ -85,38 +85,55 @@ preset_options = {
     }
 }
 
-# Initialize session state feature values if not present
-if "feature_state" not in st.session_state:
-    st.session_state.feature_state = preset_options["Custom Input"].copy()
-
-def update_preset():
+# Helper callback to update widget session_state directly when preset changes
+def apply_preset():
     selected = st.session_state.preset_selector
     if selected in preset_options:
-        st.session_state.feature_state = preset_options[selected].copy()
+        opts = preset_options[selected]
+        st.session_state["slider_val_ratio"] = float(opts["value_ratio"])
+        st.session_state["num_time_delta"] = float(opts["time_delta"])
+        st.session_state["slider_hop_count"] = int(opts["hop_count"])
+        st.session_state["slider_amt_sim"] = float(opts["amount_similarity"])
+        st.session_state["num_degree"] = float(opts["degree"])
+        st.session_state["num_fanout"] = float(opts["fanout"])
+        st.session_state["num_fanin"] = float(opts["fanin"])
+        st.session_state["num_freq"] = float(opts["transaction_frequency"])
+        st.session_state["sel_evidence"] = int(opts["entity_evidence"])
+        st.session_state["num_age"] = float(opts["address_age"])
+
+# Initialize default keys if not present
+if "slider_val_ratio" not in st.session_state:
+    st.session_state["slider_val_ratio"] = 0.95
+    st.session_state["num_time_delta"] = 120.0
+    st.session_state["slider_hop_count"] = 3
+    st.session_state["slider_amt_sim"] = 0.92
+    st.session_state["num_degree"] = 8.0
+    st.session_state["num_fanout"] = 2.0
+    st.session_state["num_fanin"] = 1.0
+    st.session_state["num_freq"] = 22.0
+    st.session_state["sel_evidence"] = 3
+    st.session_state["num_age"] = 400.0
 
 preset_choice = st.sidebar.selectbox(
     "Load Scenario Preset:",
     list(preset_options.keys()),
     key="preset_selector",
-    on_change=update_preset
+    on_change=apply_preset
 )
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("### Input Path Features")
 
-# Interactive Sliders bound to Session State
-val_state = st.session_state.feature_state
-
-value_ratio = st.sidebar.slider("value_ratio", 0.0, 1.0, float(val_state["value_ratio"]), 0.01, key="slider_val_ratio")
-time_delta = st.sidebar.number_input("time_delta (sec)", 1.0, 50000.0, float(val_state["time_delta"]), 10.0, key="num_time_delta")
-hop_count = st.sidebar.slider("hop_count", 1, 6, int(val_state["hop_count"]), key="slider_hop_count")
-amount_similarity = st.sidebar.slider("amount_similarity", 0.0, 1.0, float(val_state["amount_similarity"]), 0.01, key="slider_amt_sim")
-degree = st.sidebar.number_input("degree (avg node degree)", 0.5, 300.0, float(val_state["degree"]), 0.5, key="num_degree")
-fanout = st.sidebar.number_input("fanout (outgoing neighbors)", 0.0, 300.0, float(val_state["fanout"]), 0.1, key="num_fanout")
-fanin = st.sidebar.number_input("fanin (incoming neighbors)", 0.0, 300.0, float(val_state["fanin"]), 0.5, key="num_fanin")
-transaction_frequency = st.sidebar.number_input("transaction_frequency", 0.1, 2000.0, float(val_state["transaction_frequency"]), 1.0, key="num_freq")
-entity_evidence = st.sidebar.selectbox("entity_evidence", [0, 1, 2, 3], index=int(val_state["entity_evidence"]), key="sel_evidence")
-address_age = st.sidebar.number_input("address_age (days)", 1.0, 2000.0, float(val_state["address_age"]), 10.0, key="num_age")
+value_ratio = st.sidebar.slider("value_ratio", 0.0, 1.0, key="slider_val_ratio")
+time_delta = st.sidebar.number_input("time_delta (sec)", 1.0, 50000.0, key="num_time_delta")
+hop_count = st.sidebar.slider("hop_count", 1, 6, key="slider_hop_count")
+amount_similarity = st.sidebar.slider("amount_similarity", 0.0, 1.0, key="slider_amt_sim")
+degree = st.sidebar.number_input("degree (avg node degree)", 0.5, 300.0, key="num_degree")
+fanout = st.sidebar.number_input("fanout (outgoing neighbors)", 0.0, 300.0, key="num_fanout")
+fanin = st.sidebar.number_input("fanin (incoming neighbors)", 0.0, 300.0, key="num_fanin")
+transaction_frequency = st.sidebar.number_input("transaction_frequency", 0.1, 2000.0, key="num_freq")
+entity_evidence = st.sidebar.selectbox("entity_evidence", [0, 1, 2, 3], key="sel_evidence")
+address_age = st.sidebar.number_input("address_age (days)", 1.0, 2000.0, key="num_age")
 
 input_features = {
     "value_ratio": value_ratio,
