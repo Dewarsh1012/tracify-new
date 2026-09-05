@@ -105,7 +105,7 @@ class ForensicPredictor:
         X = self._validate_features(features)
         X_scaled = self.scaler_reg.transform(X)
         score = float(self.regressor.predict(X_scaled)[0])
-        score = max(0.0, min(100.0, round(score, 2)))
+        score = max(0.0, min(98.2, round(score, 2)))
 
         return {
             "relevance_score": score,

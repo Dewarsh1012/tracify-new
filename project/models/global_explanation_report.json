@@ -5,69 +5,69 @@
     "top_features": [
       {
         "rank": 1,
-        "feature": "degree",
-        "importance": 0.578911
+        "feature": "entity_evidence",
+        "importance": 0.632471
       },
       {
         "rank": 2,
-        "feature": "entity_evidence",
-        "importance": 0.18114
+        "feature": "degree",
+        "importance": 0.193768
       },
       {
         "rank": 3,
         "feature": "transaction_frequency",
-        "importance": 0.160624
+        "importance": 0.09588
       },
       {
         "rank": 4,
         "feature": "fanin",
-        "importance": 0.0468
+        "importance": 0.046151
       },
       {
         "rank": 5,
-        "feature": "fanout",
-        "importance": 0.01258
+        "feature": "time_delta",
+        "importance": 0.008621
       },
       {
         "rank": 6,
         "feature": "amount_similarity",
-        "importance": 0.00626
+        "importance": 0.007942
       },
       {
         "rank": 7,
-        "feature": "time_delta",
-        "importance": 0.00623
+        "feature": "hop_count",
+        "importance": 0.003612
       },
       {
         "rank": 8,
-        "feature": "path_length",
-        "importance": 0.002795
+        "feature": "value_ratio",
+        "importance": 0.00356
       },
       {
         "rank": 9,
-        "feature": "hop_count",
-        "importance": 0.002794
+        "feature": "path_length",
+        "importance": 0.003173
       },
       {
         "rank": 10,
         "feature": "address_age",
-        "importance": 0.000826
+        "importance": 0.002933
       },
       {
         "rank": 11,
-        "feature": "value_ratio",
-        "importance": 0.00073
+        "feature": "fanout",
+        "importance": 0.001667
       },
       {
         "rank": 12,
         "feature": "same_asset",
-        "importance": 0.00031
+        "importance": 0.000224
       }
     ],
     "interpretation": {
-      "degree": "Most important feature (0.5789). Strongly drives relevance predictions.",
-      "entity_evidence": "Second most important (0.1811). Key contributing factor.",
-      "transaction_frequency": "Third most important (0.1606)."
+      "entity_evidence": "Most important feature (0.6325). Strongly drives relevance predictions.",
+      "degree": "Second most important (0.1938). Key contributing factor.",
+      "transaction_frequency": "Third most important (0.0959)."
     }
   },
   "classifier": {

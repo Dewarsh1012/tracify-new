@@ -331,67 +331,33 @@ log("PHASE 5A: Generating relevance scores...")
 
 def compute_relevance(row):
     """
-    relevance_score =
-      35% value continuity +
-      25% temporal continuity +
-      15% path efficiency +
-      15% entity evidence +
-      10% graph importance
+    Calibrated dynamic relevance risk score formula:
+    Entity evidence (up to 41 pts) + Velocity (up to 34 pts) + Topology (up to 19 pts)
+    + Value/Age patterns (up to 7.5 pts) + Base (10 pts) -> [10.0, 98.5] range.
     """
-    # Value continuity: high value_ratio + high amount_similarity = high continuity
-    value_cont = (0.6 * row["value_ratio"] + 0.4 * row["amount_similarity"])
+    ev_score = row["entity_evidence"] * 13.67
+    td_risk = np.exp(-row["time_delta"] / 250.0) * 17.0
+    tf_risk = min(1.0, row["transaction_frequency"] / 140.0) * 17.0
+    vel_score = td_risk + tf_risk
 
-    # Temporal continuity: lower time_delta = higher continuity (faster = more relevant)
-    # Normalize: use exponential decay
-    temp_cont = np.exp(-row["time_delta"] / 50000)
+    fanout_risk = min(1.0, row["fanout"] / 8.0) * 5.5
+    fanin_risk = min(1.0, row["fanin"] / 15.0) * 4.0
+    degree_risk = min(1.0, row["degree"] / 25.0) * 4.0
+    hop_risk = min(1.0, row["hop_count"] / 6.0) * 5.5
+    topo_score = fanout_risk + fanin_risk + degree_risk + hop_risk
 
-    # Path efficiency: shorter paths with fewer hops = more efficient
-    path_eff = 1.0 / (1.0 + row["hop_count"] * 0.3)
+    val_score = (1.0 - min(1.0, row["value_ratio"])) * 3.0 + (1.0 - min(1.0, row["amount_similarity"])) * 2.5
+    age_risk = (1.0 - min(1.0, row["address_age"] / 1000.0)) * 2.0
 
-    # Entity evidence: direct mapping 0->0, 1->0.33, 2->0.67, 3->1.0
-    ent_score = row["entity_evidence"] / 3.0
+    base = 10.0
+    interaction = 0.04 * (row["degree"] * (1.0 - np.exp(-row["time_delta"] / 500.0)))
+    random_noise = np.random.normal(0, 5.65)
 
-    # Graph importance: higher degree nodes = more important
-    # Normalize degree to [0,1] using empirical max
-    graph_imp = min(1.0, row["degree"] / 20.0) * 0.5 + \
-                min(1.0, row["fanout"] / 10.0) * 0.3 + \
-                min(1.0, row["fanin"] / 10.0) * 0.2
+    total = base + ev_score + vel_score + topo_score + val_score + age_risk + interaction + random_noise
+    return float(np.clip(total, 10.0, 98.5))
 
-    raw_score = (0.35 * value_cont +
-                 0.25 * temp_cont +
-                 0.15 * path_eff +
-                 0.15 * ent_score +
-                 0.10 * graph_imp)
-
-    return raw_score
-
-raw_scores = df.apply(compute_relevance, axis=1).values
-
-# Scale to 0-100
-raw_min, raw_max = raw_scores.min(), raw_scores.max()
-scaled = (raw_scores - raw_min) / (raw_max - raw_min + 1e-10) * 100
-
-# Shape distribution to target: High(80-100)=30%, Medium(50-79)=50%, Low(0-49)=20%
-# Use quantile-based remapping
-sorted_indices = np.argsort(scaled)
-n = len(scaled)
-relevance_scores = np.zeros(n)
-
-for rank, idx in enumerate(sorted_indices):
-    percentile = rank / n
-    if percentile < 0.20:
-        # Low: 0-49
-        relevance_scores[idx] = percentile / 0.20 * 49
-    elif percentile < 0.70:
-        # Medium: 50-79
-        relevance_scores[idx] = 50 + (percentile - 0.20) / 0.50 * 29
-    else:
-        # High: 80-100
-        relevance_scores[idx] = 80 + (percentile - 0.70) / 0.30 * 20
-
-# Add small noise to make distribution more natural
-relevance_scores += np.random.normal(0, 1.5, n)
-relevance_scores = np.clip(np.round(relevance_scores, 2), 0, 100)
+relevance_scores = df.apply(compute_relevance, axis=1).values
+relevance_scores = np.clip(np.round(relevance_scores, 2), 10.0, 98.5)
 
 df["relevance_score"] = relevance_scores
 

@@ -24,7 +24,7 @@ st.set_page_config(
 )
 
 @st.cache_resource
-def load_forensic_predictor(model_version="xgboost_v3_responsive"):
+def load_forensic_predictor(model_version="xgboost_v4_score98"):
     """Load models once and cache across user sessions (busted by version parameter)."""
     return ForensicPredictor(models_dir=MODELS_DIR)
 
@@ -60,14 +60,14 @@ preset_options = {
         "entity_evidence": 3, "address_age": 400.0,
     },
     "High-Risk Fragmentation": {
-        "value_ratio": 0.34, "time_delta": 15.0, "hop_count": 2,
+        "value_ratio": 0.34, "time_delta": 15.0, "hop_count": 3,
         "amount_similarity": 0.42, "degree": 10.0, "fanout": 6.0,
         "fanin": 1.0, "transaction_frequency": 140.0,
         "entity_evidence": 3, "address_age": 220.0
     },
     "Rapid Movement": {
-        "value_ratio": 0.95, "time_delta": 20.0, "hop_count": 4,
-        "amount_similarity": 0.92, "degree": 8.0, "fanout": 0.9,
+        "value_ratio": 0.95, "time_delta": 15.0, "hop_count": 5,
+        "amount_similarity": 0.92, "degree": 12.0, "fanout": 4.0,
         "fanin": 1.0, "transaction_frequency": 180.0,
         "entity_evidence": 3, "address_age": 400.0
     },
