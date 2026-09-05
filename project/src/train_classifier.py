@@ -1,6 +1,6 @@
 """
-Training script for the Random Forest Classifier model.
-Predicts behavior_class for transaction paths.
+Training script for the XGBoost Classifier model.
+Predicts behavior_class for transaction paths with overfitting/underfitting checks.
 
 Classes:
     0 = Normal Flow
@@ -20,9 +20,9 @@ import warnings
 import numpy as np
 import pandas as pd
 import joblib
+import xgboost as xgb
 
 from sklearn.model_selection import train_test_split, GridSearchCV, cross_val_score
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import (
     accuracy_score,
@@ -42,7 +42,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from config import (
     CLASSIFIER_DATA, CLASSIFIER_MODEL_PATH, SCALER_CLF_PATH,
     FEATURE_COLUMNS, CLASSIFIER_TARGET, BEHAVIOR_LABELS,
-    RF_PARAM_GRID, CV_FOLDS, TEST_SIZE, RANDOM_STATE,
+    XGB_CLF_PARAM_GRID, CV_FOLDS, TEST_SIZE, RANDOM_STATE,
     MODELS_DIR, PLOTS_DIR,
 )
 from utils import (
@@ -53,7 +53,7 @@ from utils import (
 
 
 def train_classifier():
-    """Full training pipeline for the Random Forest Classifier."""
+    """Full training pipeline for the XGBoost Classifier."""
     start_time = time.time()
     os.makedirs(MODELS_DIR, exist_ok=True)
     os.makedirs(PLOTS_DIR, exist_ok=True)
@@ -89,27 +89,21 @@ def train_classifier():
     X_test_scaled = scaler.transform(X_test)
 
     # ──────────────────────────────────────────────────────────────
-    # Step 4: GridSearchCV
+    # Step 4: GridSearchCV (XGBClassifier)
     # ──────────────────────────────────────────────────────────────
     print(f"\n{'='*60}")
-    print("GridSearchCV — Random Forest Classifier")
+    print("GridSearchCV — XGBoost Classifier")
     print(f"{'='*60}")
 
-    param_grid = {
-        "n_estimators": [100, 200],
-        "max_depth": [15, 20],
-        "min_samples_split": [2, 5],
-        "min_samples_leaf": [1],
-        "max_features": ["sqrt"],
-    }
-
-    rf = RandomForestClassifier(
-        random_state=RANDOM_STATE, n_jobs=-1, class_weight="balanced"
+    xgb_clf = xgb.XGBClassifier(
+        random_state=RANDOM_STATE,
+        n_jobs=-1,
+        eval_metric="mlogloss"
     )
 
     grid_search = GridSearchCV(
-        estimator=rf,
-        param_grid=param_grid,
+        estimator=xgb_clf,
+        param_grid=XGB_CLF_PARAM_GRID,
         cv=CV_FOLDS,
         scoring="f1_weighted",
         n_jobs=-1,
@@ -118,7 +112,7 @@ def train_classifier():
     )
 
     print(f"  Starting grid search with {CV_FOLDS}-fold CV...")
-    print(f"  Parameter combinations: {np.prod([len(v) for v in param_grid.values()])}")
+    print(f"  Parameter combinations: {np.prod([len(v) for v in XGB_CLF_PARAM_GRID.values()])}")
     grid_search.fit(X_train_scaled, y_train)
 
     best_model = grid_search.best_estimator_
@@ -140,41 +134,50 @@ def train_classifier():
     print(f"  Mean CV F1:   {cv_scores.mean():.6f} ± {cv_scores.std():.6f}")
 
     # ──────────────────────────────────────────────────────────────
-    # Step 6: Evaluation on Test Set
+    # Step 6: Evaluation & Overfitting/Underfitting Check
     # ──────────────────────────────────────────────────────────────
     print(f"\n{'='*60}")
-    print("Test Set Evaluation")
+    print("Train vs Test Evaluation (Generalization Check)")
     print(f"{'='*60}")
 
-    y_pred = best_model.predict(X_test_scaled)
-    y_prob = best_model.predict_proba(X_test_scaled)
+    y_train_pred = best_model.predict(X_train_scaled)
+    y_test_pred = best_model.predict(X_test_scaled)
+    y_test_prob = best_model.predict_proba(X_test_scaled)
 
-    accuracy = accuracy_score(y_test, y_pred)
-    precision = precision_score(y_test, y_pred, average="weighted")
-    recall = recall_score(y_test, y_pred, average="weighted")
-    f1 = f1_score(y_test, y_pred, average="weighted")
+    train_f1 = f1_score(y_train, y_train_pred, average="weighted")
+    test_f1 = f1_score(y_test, y_test_pred, average="weighted")
 
-    # ROC-AUC (one-vs-rest)
+    accuracy = accuracy_score(y_test, y_test_pred)
+    precision = precision_score(y_test, y_test_pred, average="weighted")
+    recall = recall_score(y_test, y_test_pred, average="weighted")
+
     try:
-        roc_auc = roc_auc_score(y_test, y_prob, multi_class="ovr", average="weighted")
+        roc_auc = roc_auc_score(y_test, y_test_prob, multi_class="ovr", average="weighted")
     except Exception:
         roc_auc = None
 
+    print(f"  Train F1: {train_f1:.6f}")
+    print(f"  Test F1:  {test_f1:.6f}")
+    print(f"  Train-Test Gap: {abs(train_f1 - test_f1):.6f}")
     print(f"  Accuracy:  {accuracy:.6f}")
     print(f"  Precision: {precision:.6f}")
     print(f"  Recall:    {recall:.6f}")
-    print(f"  F1 Score:  {f1:.6f}")
     if roc_auc is not None:
         print(f"  ROC-AUC:   {roc_auc:.6f}")
 
+    if abs(train_f1 - test_f1) > 0.05:
+        print("  ⚠️ Warning: Potential overfitting detected (Gap > 0.05)")
+    else:
+        print("  ✓ Optimal fit confirmed: Train and Test performance are closely aligned.")
+
     # Confusion matrix
-    cm = confusion_matrix(y_test, y_pred)
+    cm = confusion_matrix(y_test, y_test_pred)
     print(f"\n  Confusion Matrix:")
     print(f"  {cm}")
 
     # Classification report
     class_names = [BEHAVIOR_LABELS[i] for i in sorted(BEHAVIOR_LABELS.keys())]
-    report_str = classification_report(y_test, y_pred, target_names=class_names)
+    report_str = classification_report(y_test, y_test_pred, target_names=class_names)
     print(f"\n  Classification Report:")
     print(report_str)
 
@@ -189,14 +192,14 @@ def train_classifier():
     plot_feature_importance(
         best_model.feature_importances_,
         feature_cols,
-        "Random Forest Classifier — Feature Importance",
+        "XGBoost Classifier — Feature Importance",
         os.path.join(PLOTS_DIR, "classifier_feature_importance.png"),
     )
 
     # Confusion matrix
     plot_confusion_matrix(
         cm, class_names,
-        f"Confusion Matrix (Accuracy={accuracy:.4f})",
+        f"XGBoost Confusion Matrix (Accuracy={accuracy:.4f})",
         os.path.join(PLOTS_DIR, "classifier_confusion_matrix.png"),
     )
 
@@ -225,7 +228,7 @@ def train_classifier():
     # ──────────────────────────────────────────────────────────────
     elapsed = time.time() - start_time
     metadata = {
-        "model_type": "RandomForestClassifier",
+        "model_type": "XGBClassifier",
         "task": "classification",
         "target": CLASSIFIER_TARGET,
         "classes": {str(k): v for k, v in BEHAVIOR_LABELS.items()},
@@ -238,13 +241,14 @@ def train_classifier():
             "accuracy": round(accuracy, 6),
             "precision_weighted": round(precision, 6),
             "recall_weighted": round(recall, 6),
-            "f1_weighted": round(f1, 6),
+            "f1_weighted": round(test_f1, 6),
+            "f1_train": round(train_f1, 6),
             "roc_auc_weighted": round(roc_auc, 6) if roc_auc else None,
             "CV_F1_mean": round(cv_scores.mean(), 6),
             "CV_F1_std": round(cv_scores.std(), 6),
         },
         "feature_importances": {
-            col: round(imp, 6)
+            col: round(float(imp), 6)
             for col, imp in zip(feature_cols, best_model.feature_importances_)
         },
         "classification_report": report_str,
@@ -265,11 +269,11 @@ def train_classifier():
     # Final Summary
     # ──────────────────────────────────────────────────────────────
     print(f"\n{'='*60}")
-    print("CLASSIFIER TRAINING COMPLETE")
+    print("XGBOOST CLASSIFIER TRAINING COMPLETE")
     print(f"{'='*60}")
     print(f"  Model:    {CLASSIFIER_MODEL_PATH}")
     print(f"  Accuracy: {accuracy:.6f}")
-    print(f"  F1:       {f1:.6f}")
+    print(f"  F1:       {test_f1:.6f}")
     print(f"  Time:     {elapsed:.1f}s")
     print()
 

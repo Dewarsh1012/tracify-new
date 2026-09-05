@@ -1,5 +1,5 @@
 {
-  "model_type": "RandomForestRegressor",
+  "model_type": "XGBRegressor",
   "task": "regression",
   "target": "relevance_score",
   "features": [
@@ -20,35 +20,38 @@
   "train_samples": 80000,
   "test_samples": 20000,
   "best_params": {
-    "max_depth": 20,
-    "max_features": "sqrt",
-    "min_samples_leaf": 1,
-    "min_samples_split": 2,
-    "n_estimators": 200
+    "colsample_bytree": 0.8,
+    "learning_rate": 0.05,
+    "max_depth": 4,
+    "n_estimators": 200,
+    "reg_alpha": 0.1,
+    "reg_lambda": 1.0,
+    "subsample": 0.8
   },
   "metrics": {
-    "MAE": 1.5861,
-    "MSE": 4.5074,
-    "RMSE": 2.1231,
-    "R2": 0.992549,
-    "CV_R2_mean": 0.991631,
-    "CV_R2_std": 0.000159
+    "MAE": 4.2557,
+    "MSE": 28.4305,
+    "RMSE": 5.332,
+    "R2_train": 0.902911,
+    "R2": 0.900207,
+    "CV_R2_mean": 0.901212,
+    "CV_R2_std": 0.001544
   },
   "feature_importances": {
-    "value_ratio": 0.335567,
-    "time_delta": 0.00285,
-    "same_asset": 0.000437,
-    "hop_count": 0.015429,
-    "amount_similarity": 0.33938,
-    "degree": 0.039139,
-    "fanout": 0.008826,
-    "fanin": 0.058573,
-    "address_age": 0.008821,
-    "transaction_frequency": 0.029953,
-    "entity_evidence": 0.145805,
-    "path_length": 0.015219
+    "value_ratio": 0.002371,
+    "time_delta": 0.000803,
+    "same_asset": 0.000401,
+    "hop_count": 0.009676,
+    "amount_similarity": 0.030304,
+    "degree": 0.094653,
+    "fanout": 0.00076,
+    "fanin": 0.410396,
+    "address_age": 0.001104,
+    "transaction_frequency": 0.05313,
+    "entity_evidence": 0.38806,
+    "path_length": 0.008342
   },
-  "training_time_seconds": 89.09,
+  "training_time_seconds": 7.89,
   "validation_report": {
     "total_missing": 0,
     "duplicates": 0

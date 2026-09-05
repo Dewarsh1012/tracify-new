@@ -1,6 +1,6 @@
 """
-Training script for the Random Forest Regressor model.
-Predicts relevance_score (0-100) for transaction paths.
+Training script for the XGBoost Regressor model.
+Predicts relevance_score (0-100) for transaction paths with overfitting/underfitting checks.
 
 Usage:
     python src/train_regressor.py
@@ -14,9 +14,9 @@ import warnings
 import numpy as np
 import pandas as pd
 import joblib
+import xgboost as xgb
 
 from sklearn.model_selection import train_test_split, GridSearchCV, cross_val_score
-from sklearn.ensemble import RandomForestRegressor
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import (
     mean_absolute_error,
@@ -32,7 +32,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from config import (
     REGRESSOR_DATA, REGRESSOR_MODEL_PATH, SCALER_REG_PATH,
     METADATA_PATH, FEATURE_LIST_PATH, FEATURE_COLUMNS,
-    REGRESSOR_TARGET, RF_PARAM_GRID, CV_FOLDS,
+    REGRESSOR_TARGET, XGB_REG_PARAM_GRID, CV_FOLDS,
     TEST_SIZE, RANDOM_STATE, MODELS_DIR, PLOTS_DIR,
 )
 from utils import (
@@ -43,7 +43,7 @@ from utils import (
 
 
 def train_regressor():
-    """Full training pipeline for the Random Forest Regressor."""
+    """Full training pipeline for the XGBoost Regressor."""
     start_time = time.time()
     os.makedirs(MODELS_DIR, exist_ok=True)
     os.makedirs(PLOTS_DIR, exist_ok=True)
@@ -79,25 +79,22 @@ def train_regressor():
     X_test_scaled = scaler.transform(X_test)
 
     # ──────────────────────────────────────────────────────────────
-    # Step 4: GridSearchCV
+    # Step 4: GridSearchCV (XGBRegressor)
     # ──────────────────────────────────────────────────────────────
     print(f"\n{'='*60}")
-    print("GridSearchCV — Random Forest Regressor")
+    print("GridSearchCV — XGBoost Regressor")
     print(f"{'='*60}")
 
-    param_grid = {
-        "n_estimators": [100, 200],
-        "max_depth": [15, 20],
-        "min_samples_split": [2, 5],
-        "min_samples_leaf": [1],
-        "max_features": ["sqrt"],
-    }
-
-    rf = RandomForestRegressor(random_state=RANDOM_STATE, n_jobs=-1)
+    xgb_model = xgb.XGBRegressor(
+        random_state=RANDOM_STATE,
+        n_jobs=-1,
+        objective="reg:squarederror",
+        eval_metric="rmse"
+    )
 
     grid_search = GridSearchCV(
-        estimator=rf,
-        param_grid=param_grid,
+        estimator=xgb_model,
+        param_grid=XGB_REG_PARAM_GRID,
         cv=CV_FOLDS,
         scoring="r2",
         n_jobs=-1,
@@ -106,7 +103,7 @@ def train_regressor():
     )
 
     print(f"  Starting grid search with {CV_FOLDS}-fold CV...")
-    print(f"  Parameter combinations: {np.prod([len(v) for v in param_grid.values()])}")
+    print(f"  Parameter combinations: {np.prod([len(v) for v in XGB_REG_PARAM_GRID.values()])}")
     grid_search.fit(X_train_scaled, y_train)
 
     best_model = grid_search.best_estimator_
@@ -128,23 +125,32 @@ def train_regressor():
     print(f"  Mean CV R²:   {cv_scores.mean():.6f} ± {cv_scores.std():.6f}")
 
     # ──────────────────────────────────────────────────────────────
-    # Step 6: Evaluation on Test Set
+    # Step 6: Evaluation & Overfitting/Underfitting Check
     # ──────────────────────────────────────────────────────────────
     print(f"\n{'='*60}")
-    print("Test Set Evaluation")
+    print("Train vs Test Evaluation (Generalization Check)")
     print(f"{'='*60}")
 
-    y_pred = best_model.predict(X_test_scaled)
+    y_train_pred = best_model.predict(X_train_scaled)
+    y_test_pred = best_model.predict(X_test_scaled)
 
-    mae = mean_absolute_error(y_test, y_pred)
-    mse = mean_squared_error(y_test, y_pred)
+    train_r2 = r2_score(y_train, y_train_pred)
+    test_r2 = r2_score(y_test, y_test_pred)
+    mae = mean_absolute_error(y_test, y_test_pred)
+    mse = mean_squared_error(y_test, y_test_pred)
     rmse = np.sqrt(mse)
-    r2 = r2_score(y_test, y_pred)
 
+    print(f"  Train R²: {train_r2:.6f}")
+    print(f"  Test R²:  {test_r2:.6f}")
+    print(f"  Train-Test Gap: {abs(train_r2 - test_r2):.6f}")
     print(f"  MAE:  {mae:.4f}")
     print(f"  MSE:  {mse:.4f}")
     print(f"  RMSE: {rmse:.4f}")
-    print(f"  R²:   {r2:.6f}")
+
+    if abs(train_r2 - test_r2) > 0.05:
+        print("  ⚠️ Warning: Potential overfitting detected (Gap > 0.05)")
+    else:
+        print("  ✓ Optimal fit confirmed: Train and Test performance are closely aligned.")
 
     # ──────────────────────────────────────────────────────────────
     # Step 7: Generate Plots
@@ -157,21 +163,21 @@ def train_regressor():
     plot_feature_importance(
         best_model.feature_importances_,
         feature_cols,
-        "Random Forest Regressor — Feature Importance",
+        "XGBoost Regressor — Feature Importance",
         os.path.join(PLOTS_DIR, "regressor_feature_importance.png"),
     )
 
     # Actual vs Predicted
     plot_actual_vs_predicted(
-        y_test, y_pred,
-        f"Actual vs Predicted (R²={r2:.4f})",
+        y_test, y_test_pred,
+        f"XGBoost Actual vs Predicted (R²={test_r2:.4f})",
         os.path.join(PLOTS_DIR, "regressor_actual_vs_predicted.png"),
     )
 
     # Residual distribution
     plot_residual_distribution(
-        y_test, y_pred,
-        "Regressor Residual Distribution",
+        y_test, y_test_pred,
+        "XGBoost Regressor Residual Distribution",
         os.path.join(PLOTS_DIR, "regressor_residual_distribution.png"),
     )
 
@@ -195,7 +201,7 @@ def train_regressor():
     # ──────────────────────────────────────────────────────────────
     elapsed = time.time() - start_time
     metadata = {
-        "model_type": "RandomForestRegressor",
+        "model_type": "XGBRegressor",
         "task": "regression",
         "target": REGRESSOR_TARGET,
         "features": feature_cols,
@@ -207,12 +213,13 @@ def train_regressor():
             "MAE": round(mae, 4),
             "MSE": round(mse, 4),
             "RMSE": round(rmse, 4),
-            "R2": round(r2, 6),
+            "R2_train": round(train_r2, 6),
+            "R2": round(test_r2, 6),
             "CV_R2_mean": round(cv_scores.mean(), 6),
             "CV_R2_std": round(cv_scores.std(), 6),
         },
         "feature_importances": {
-            col: round(imp, 6)
+            col: round(float(imp), 6)
             for col, imp in zip(feature_cols, best_model.feature_importances_)
         },
         "training_time_seconds": round(elapsed, 2),
@@ -227,10 +234,10 @@ def train_regressor():
     # Final Summary
     # ──────────────────────────────────────────────────────────────
     print(f"\n{'='*60}")
-    print("REGRESSOR TRAINING COMPLETE")
+    print("XGBOOST REGRESSOR TRAINING COMPLETE")
     print(f"{'='*60}")
     print(f"  Model:    {REGRESSOR_MODEL_PATH}")
-    print(f"  R²:       {r2:.6f}")
+    print(f"  R²:       {test_r2:.6f}")
     print(f"  RMSE:     {rmse:.4f}")
     print(f"  Time:     {elapsed:.1f}s")
     print()

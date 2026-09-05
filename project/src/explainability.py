@@ -1,6 +1,6 @@
 """
 Explainability module for the Blockchain Forensics ML Pipeline.
-Generates feature importance rankings, SHAP analysis, and global explanation reports.
+Generates feature importance rankings, SHAP analysis, and global explanation reports for XGBoost models.
 
 Usage:
     python src/explainability.py
@@ -35,11 +35,11 @@ plt.style.use("seaborn-v0_8-darkgrid")
 
 
 def generate_explanation_report():
-    """Generate comprehensive explainability report for both models."""
+    """Generate comprehensive explainability report for both XGBoost models."""
     os.makedirs(PLOTS_DIR, exist_ok=True)
 
     print("=" * 60)
-    print("EXPLAINABILITY REPORT")
+    print("EXPLAINABILITY REPORT — XGBOOST MODELS")
     print("=" * 60)
 
     # Load models
@@ -52,13 +52,13 @@ def generate_explanation_report():
     reg_imp = reg_model.feature_importances_
     clf_imp = clf_model.feature_importances_
 
-    print("\n  Top 10 Features — Regressor:")
+    print("\n  Top 10 Features — XGBoost Regressor:")
     reg_sorted = sorted(zip(FEATURE_COLUMNS, reg_imp), key=lambda x: x[1], reverse=True)
     for i, (feat, imp) in enumerate(reg_sorted[:10], 1):
         bar = "█" * int(imp * 100)
         print(f"    {i:2d}. {feat:<25s} {imp:.4f}  {bar}")
 
-    print("\n  Top 10 Features — Classifier:")
+    print("\n  Top 10 Features — XGBoost Classifier:")
     clf_sorted = sorted(zip(FEATURE_COLUMNS, clf_imp), key=lambda x: x[1], reverse=True)
     for i, (feat, imp) in enumerate(clf_sorted[:10], 1):
         bar = "█" * int(imp * 100)
@@ -74,13 +74,13 @@ def generate_explanation_report():
     reg_vals = reg_imp[reg_order]
     clf_vals = clf_imp[reg_order]
 
-    bars1 = ax.barh(x - width / 2, reg_vals, width, label="Regressor", color="#55A868", edgecolor="white")
-    bars2 = ax.barh(x + width / 2, clf_vals, width, label="Classifier", color="#4C72B0", edgecolor="white")
+    bars1 = ax.barh(x - width / 2, reg_vals, width, label="XGBoost Regressor", color="#55A868", edgecolor="white")
+    bars2 = ax.barh(x + width / 2, clf_vals, width, label="XGBoost Classifier", color="#4C72B0", edgecolor="white")
 
     ax.set_yticks(x)
     ax.set_yticklabels(ordered_features, fontsize=11)
     ax.set_xlabel("Feature Importance", fontsize=12)
-    ax.set_title("Feature Importance Comparison — Regressor vs Classifier",
+    ax.set_title("Feature Importance Comparison — XGBoost Regressor vs Classifier",
                  fontsize=14, fontweight="bold")
     ax.legend(fontsize=11)
     ax.invert_yaxis()
@@ -111,7 +111,7 @@ def generate_explanation_report():
         fig, ax = plt.subplots(figsize=(12, 8))
         shap.summary_plot(shap_values_reg, X_sample, feature_names=FEATURE_COLUMNS,
                           show=False)
-        plt.title("SHAP Summary — Regressor", fontsize=14, fontweight="bold")
+        plt.title("SHAP Summary — XGBoost Regressor", fontsize=14, fontweight="bold")
         plt.tight_layout()
         plt.savefig(os.path.join(PLOTS_DIR, "shap_regressor_summary.png"),
                     dpi=150, bbox_inches="tight")
@@ -128,10 +128,9 @@ def generate_explanation_report():
         shap_values_clf = explainer_clf.shap_values(X_sample_clf_scaled)
 
         fig, ax = plt.subplots(figsize=(12, 8))
-        # For multi-class, use the first class as example
         shap.summary_plot(shap_values_clf[0] if isinstance(shap_values_clf, list) else shap_values_clf,
                           X_sample_clf, feature_names=FEATURE_COLUMNS, show=False)
-        plt.title("SHAP Summary — Classifier (Class 0: Normal Flow)",
+        plt.title("SHAP Summary — XGBoost Classifier (Class 0: Normal Flow)",
                   fontsize=14, fontweight="bold")
         plt.tight_layout()
         plt.savefig(os.path.join(PLOTS_DIR, "shap_classifier_summary.png"),
@@ -139,9 +138,8 @@ def generate_explanation_report():
         plt.close()
         print(f"  Saved: {os.path.join(PLOTS_DIR, 'shap_classifier_summary.png')}")
 
-    except ImportError:
-        print("  ⚠ SHAP library not installed. Skipping SHAP analysis.")
-        print("    Install with: pip install shap")
+    except Exception as e:
+        print(f"  ⚠️ SHAP generation note: {e}")
 
     # ── Global Explanation Report ──
     print(f"\n{'='*60}")
@@ -150,10 +148,10 @@ def generate_explanation_report():
 
     report = {
         "regressor": {
-            "model_type": "RandomForestRegressor",
+            "model_type": "XGBRegressor",
             "target": "relevance_score (0-100)",
             "top_features": [
-                {"rank": i + 1, "feature": feat, "importance": round(imp, 6)}
+                {"rank": i + 1, "feature": feat, "importance": round(float(imp), 6)}
                 for i, (feat, imp) in enumerate(reg_sorted)
             ],
             "interpretation": {
@@ -165,10 +163,10 @@ def generate_explanation_report():
             },
         },
         "classifier": {
-            "model_type": "RandomForestClassifier",
+            "model_type": "XGBClassifier",
             "target": "behavior_class (0=Normal, 1=Rapid, 2=Fragment, 3=Consolidate)",
             "top_features": [
-                {"rank": i + 1, "feature": feat, "importance": round(imp, 6)}
+                {"rank": i + 1, "feature": feat, "importance": round(float(imp), 6)}
                 for i, (feat, imp) in enumerate(clf_sorted)
             ],
             "interpretation": {

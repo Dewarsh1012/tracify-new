@@ -16,8 +16,8 @@ PLOTS_DIR = os.path.join(PROJECT_ROOT, "plots")
 REGRESSOR_DATA = os.path.join(DATA_DIR, "forensic_regressor_dataset.csv")
 CLASSIFIER_DATA = os.path.join(DATA_DIR, "forensic_classifier_dataset.csv")
 
-REGRESSOR_MODEL_PATH = os.path.join(MODELS_DIR, "random_forest_regressor.pkl")
-CLASSIFIER_MODEL_PATH = os.path.join(MODELS_DIR, "random_forest_classifier.pkl")
+REGRESSOR_MODEL_PATH = os.path.join(MODELS_DIR, "xgboost_regressor.pkl")
+CLASSIFIER_MODEL_PATH = os.path.join(MODELS_DIR, "xgboost_classifier.pkl")
 SCALER_REG_PATH = os.path.join(MODELS_DIR, "scaler_regressor.pkl")
 SCALER_CLF_PATH = os.path.join(MODELS_DIR, "scaler_classifier.pkl")
 METADATA_PATH = os.path.join(MODELS_DIR, "model_metadata.json")
@@ -67,14 +67,27 @@ TEST_SIZE = 0.20
 RANDOM_STATE = 42
 
 # ──────────────────────────────────────────────────────────────────────
-# GridSearchCV Hyperparameter Grid
+# XGBoost GridSearchCV Hyperparameter Grids (Tuned against Overfitting/Underfitting)
 # ──────────────────────────────────────────────────────────────────────
-RF_PARAM_GRID = {
-    "n_estimators": [100, 200, 300],
-    "max_depth": [10, 15, 20, None],
-    "min_samples_split": [2, 5, 10],
-    "min_samples_leaf": [1, 2, 4],
-    "max_features": ["sqrt", "log2", None],
+XGB_REG_PARAM_GRID = {
+    "n_estimators": [100, 200],
+    "max_depth": [4, 6],
+    "learning_rate": [0.05, 0.1],
+    "subsample": [0.8],
+    "colsample_bytree": [0.8],
+    "reg_alpha": [0.1],
+    "reg_lambda": [1.0],
+}
+
+XGB_CLF_PARAM_GRID = {
+    "n_estimators": [100, 200],
+    "max_depth": [4, 6],
+    "learning_rate": [0.05, 0.1],
+    "subsample": [0.8],
+    "colsample_bytree": [0.8],
+    "reg_alpha": [0.1],
+    "reg_lambda": [1.0],
 }
 
 CV_FOLDS = 5
+

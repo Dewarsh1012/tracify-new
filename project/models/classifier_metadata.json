@@ -1,5 +1,5 @@
 {
-  "model_type": "RandomForestClassifier",
+  "model_type": "XGBClassifier",
   "task": "classification",
   "target": "behavior_class",
   "classes": {
@@ -26,39 +26,42 @@
   "train_samples": 80000,
   "test_samples": 20000,
   "best_params": {
-    "max_depth": 15,
-    "max_features": "sqrt",
-    "min_samples_leaf": 1,
-    "min_samples_split": 5,
-    "n_estimators": 100
+    "colsample_bytree": 0.8,
+    "learning_rate": 0.1,
+    "max_depth": 6,
+    "n_estimators": 200,
+    "reg_alpha": 0.1,
+    "reg_lambda": 1.0,
+    "subsample": 0.8
   },
   "metrics": {
-    "accuracy": 0.78305,
-    "precision_weighted": 0.827577,
-    "recall_weighted": 0.78305,
-    "f1_weighted": 0.717443,
-    "roc_auc_weighted": 0.856483,
-    "CV_F1_mean": 0.717767,
-    "CV_F1_std": 0.001444
+    "accuracy": 0.9402,
+    "precision_weighted": 0.940329,
+    "recall_weighted": 0.9402,
+    "f1_weighted": 0.939062,
+    "f1_train": 0.937939,
+    "roc_auc_weighted": 0.95057,
+    "CV_F1_mean": 0.937236,
+    "CV_F1_std": 0.002057
   },
   "feature_importances": {
-    "value_ratio": 0.050749,
-    "time_delta": 0.012703,
-    "same_asset": 0.001518,
-    "hop_count": 0.032198,
-    "amount_similarity": 0.051536,
-    "degree": 0.158204,
-    "fanout": 0.391807,
-    "fanin": 0.147133,
-    "address_age": 0.019801,
-    "transaction_frequency": 0.095253,
-    "entity_evidence": 0.009365,
-    "path_length": 0.029735
+    "value_ratio": 0.006601,
+    "time_delta": 0.006646,
+    "same_asset": 0.005568,
+    "hop_count": 0.077347,
+    "amount_similarity": 0.008804,
+    "degree": 0.119134,
+    "fanout": 0.259516,
+    "fanin": 0.29941,
+    "address_age": 0.006434,
+    "transaction_frequency": 0.088614,
+    "entity_evidence": 0.009604,
+    "path_length": 0.112322
   },
-  "classification_report": "                precision    recall  f1-score   support\n\n   Normal Flow       0.71      1.00      0.83      8000\nRapid Movement       0.96      0.14      0.24      5000\n Fragmentation       0.87      1.00      0.93      4000\n Consolidation       0.86      1.00      0.92      3000\n\n      accuracy                           0.78     20000\n     macro avg       0.85      0.78      0.73     20000\n  weighted avg       0.83      0.78      0.72     20000\n",
-  "training_time_seconds": 87.13,
+  "classification_report": "                precision    recall  f1-score   support\n\n   Normal Flow       0.94      0.99      0.96     10290\nRapid Movement       0.95      0.76      0.85      1678\n Fragmentation       0.94      0.89      0.92      3112\n Consolidation       0.94      0.94      0.94      4920\n\n      accuracy                           0.94     20000\n     macro avg       0.94      0.89      0.92     20000\n  weighted avg       0.94      0.94      0.94     20000\n",
+  "training_time_seconds": 24.14,
   "validation_report": {
     "total_missing": 0,
-    "duplicates": 6
+    "duplicates": 7
   }
 }

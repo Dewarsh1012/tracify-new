@@ -47,8 +47,8 @@ class ForensicPredictor:
             models_dir: Path to models directory. Defaults to project/models/.
         """
         if models_dir:
-            reg_path = os.path.join(models_dir, "random_forest_regressor.pkl")
-            clf_path = os.path.join(models_dir, "random_forest_classifier.pkl")
+            reg_path = os.path.join(models_dir, "xgboost_regressor.pkl")
+            clf_path = os.path.join(models_dir, "xgboost_classifier.pkl")
             scaler_reg_path = os.path.join(models_dir, "scaler_regressor.pkl")
             scaler_clf_path = os.path.join(models_dir, "scaler_classifier.pkl")
         else:
