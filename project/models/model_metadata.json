@@ -29,27 +29,27 @@
     "subsample": 0.8
   },
   "metrics": {
-    "MAE": 4.2557,
-    "MSE": 28.4305,
-    "RMSE": 5.332,
-    "R2_train": 0.902911,
-    "R2": 0.900207,
-    "CV_R2_mean": 0.901212,
-    "CV_R2_std": 0.001544
+    "MAE": 4.3326,
+    "MSE": 29.5749,
+    "RMSE": 5.4383,
+    "R2_train": 0.904451,
+    "R2": 0.901203,
+    "CV_R2_mean": 0.902654,
+    "CV_R2_std": 0.00078
   },
   "feature_importances": {
-    "value_ratio": 0.002371,
-    "time_delta": 0.000803,
-    "same_asset": 0.000401,
-    "hop_count": 0.009676,
-    "amount_similarity": 0.030304,
-    "degree": 0.094653,
-    "fanout": 0.00076,
-    "fanin": 0.410396,
-    "address_age": 0.001104,
-    "transaction_frequency": 0.05313,
-    "entity_evidence": 0.38806,
-    "path_length": 0.008342
+    "value_ratio": 0.00073,
+    "time_delta": 0.00623,
+    "same_asset": 0.00031,
+    "hop_count": 0.002794,
+    "amount_similarity": 0.00626,
+    "degree": 0.578911,
+    "fanout": 0.01258,
+    "fanin": 0.0468,
+    "address_age": 0.000826,
+    "transaction_frequency": 0.160624,
+    "entity_evidence": 0.18114,
+    "path_length": 0.002795
   },
   "training_time_seconds": 7.89,
   "validation_report": {
